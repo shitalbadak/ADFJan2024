@@ -1,0 +1,201 @@
+{
+	"name": "pl_incremental_load_dynamic",
+	"properties": {
+		"activities": [
+			{
+				"name": "lkp_new_watermark_Orders_CustDb",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select max(@{pipeline().parameters.Watermarkvalue}) as New_Watermarkvalue from @{pipeline().parameters.TableName}",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQL_CustDB_SRC_dynamic",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": {
+								"value": "@pipeline().parameters.TableName",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "lkp_old_watermark",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select TableName,WatermarkValue as Old_Watermarkvalue from watermarktable where TableName='@{pipeline().parameters.TableName}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQL_SCmDB_TGT_WatermarkTable",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "Copy orders data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "lkp_new_watermark_Orders_CustDb",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "lkp_old_watermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select * from @{pipeline().parameters.TableName} where @{pipeline().parameters.Watermarkvalue} > '@{activity('lkp_old_watermark').output.firstRow.Old_Watermarkvalue}'\nand @{pipeline().parameters.Watermarkvalue} <= '@{activity('lkp_new_watermark_Orders_CustDb').output.firstRow.New_Watermarkvalue}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_SQL_CustDB_SRC_dynamic",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": {
+								"value": "@pipeline().parameters.TableName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_ScmDB_TGT_dynamic",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": {
+								"value": "@pipeline().parameters.TableName",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Stored procedure_to_upd_watermark value",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy orders data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spSetWatermark]",
+					"storedProcedureParameters": {
+						"NewTime": {
+							"value": {
+								"value": "@activity('lkp_new_watermark_Orders_CustDb').output.firstRow.New_Watermarkvalue",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"TableName": {
+							"value": {
+								"value": "@activity('lkp_old_watermark').output.firstRow.TableName",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQL_ScmDB_TGT",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"TableName": {
+				"type": "string",
+				"defaultValue": "orders"
+			},
+			"Watermarkvalue": {
+				"type": "string",
+				"defaultValue": "InsertDateTime"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-31T14:14:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

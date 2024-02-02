@@ -1,0 +1,33 @@
+{
+	"name": "DS_TGT_txt_sadfpractice_file_date",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Storage_SADFpractice_ADLgen2",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().Filename,'_',formatdatetime(utcnow(),'yyyy-dd-MM'))\n",
+					"type": "Expression"
+				},
+				"folderPath": "target",
+				"fileSystem": "data-engg"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

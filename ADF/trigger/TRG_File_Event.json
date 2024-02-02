@@ -1,0 +1,27 @@
+{
+	"name": "TRG_File_Event",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_copy_file_dynamic",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"Filename": "Product.txt"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/data-engg/blobs/source/Product.txt",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/417b3563-ccf8-426e-9e2b-fbb495956f75/resourceGroups/RG_ADF_PRACTICE/providers/Microsoft.Storage/storageAccounts/sadfpractice",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
