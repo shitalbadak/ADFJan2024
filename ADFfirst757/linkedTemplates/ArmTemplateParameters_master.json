@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADFfirst757"
+		},
+		"LS_SQL_CustDB_SRC_connectionString": {
+			"value": ""
+		},
+		"LS_SQL_ScmDB_TGT_connectionString": {
+			"value": ""
+		},
+		"LS_Storage_SADFpractice_ADLgen2_accountKey": {
+			"value": ""
+		},
+		"LS_Storage_SADFpractice_ADLgen2_properties_typeProperties_url": {
+			"value": "https://sadfpractice.dfs.core.windows.net/"
+		},
+		"TRG_File_Event_properties_pl_copy_file_dynamic_parameters_Filename": {
+			"value": "Product.txt"
+		},
+		"TRG_File_Event_properties_typeProperties_scope": {
+			"value": "/subscriptions/417b3563-ccf8-426e-9e2b-fbb495956f75/resourceGroups/RG_ADF_PRACTICE/providers/Microsoft.Storage/storageAccounts/sadfpractice"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
