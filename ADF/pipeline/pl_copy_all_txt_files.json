@@ -1,6 +1,7 @@
 {
 	"name": "pl_copy_all_txt_files",
 	"properties": {
+		"description": "Copy All Txt Files using wildcard path in DS",
 		"activities": [
 			{
 				"name": "Copy data1",
