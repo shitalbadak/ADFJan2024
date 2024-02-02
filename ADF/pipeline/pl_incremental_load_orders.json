@@ -1,6 +1,7 @@
 {
 	"name": "pl_incremental_load_orders",
 	"properties": {
+		"description": "Order table incremental load from sql db to sql db",
 		"activities": [
 			{
 				"name": "lkp_new_watermark_Orders_CustDb",
